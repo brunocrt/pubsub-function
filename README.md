@@ -3,7 +3,9 @@ This is a simple demo using GCP Serverless Function that publisher a message to 
 
 ## Before you test
 Set the environment variable with your project ID
+`set GOOGLE_APPLICATION_CREDENTIALS=service-account.json`
 `set GOOGLE_CLOUD_PROJECT=pacific-diode-316600`
+`set PUBSUB_TOPIC_NAME=projects/pacific-diode-316600/topics/mytopic`
 
 ### To Test it localy run
 `mvn function:run`

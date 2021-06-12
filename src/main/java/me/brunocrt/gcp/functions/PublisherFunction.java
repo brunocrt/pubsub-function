@@ -1,5 +1,8 @@
 package me.brunocrt.gcp.functions;
 
+import com.google.api.gax.core.CredentialsProvider;
+import com.google.api.gax.core.FixedCredentialsProvider;
+import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.functions.HttpFunction;
 import com.google.cloud.functions.HttpRequest;
 import com.google.cloud.functions.HttpResponse;
@@ -8,6 +11,7 @@ import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
 import java.io.BufferedWriter;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
@@ -22,12 +26,16 @@ public class PublisherFunction implements HttpFunction {
 
   // TODO<developer> set this environment variable
   private static final String PROJECT_ID = System.getenv("GOOGLE_CLOUD_PROJECT");
+  private static final String TOPIC_NAME = System.getenv("PUBSUB_TOPIC_NAME");
 
   @Override
   public void service(HttpRequest request, HttpResponse response) throws IOException {
 
     Optional<String> maybeTopicName = request.getFirstQueryParameter("topic");
     Optional<String> maybeMessage = request.getFirstQueryParameter("message");
+
+    if(maybeTopicName.isEmpty())
+      maybeTopicName = Optional.of(TOPIC_NAME);
 
     BufferedWriter responseWriter = response.getWriter();
 
@@ -45,8 +53,11 @@ public class PublisherFunction implements HttpFunction {
     ByteString byteStr = ByteString.copyFrom(maybeMessage.get(), StandardCharsets.UTF_8);
     PubsubMessage pubsubApiMessage = PubsubMessage.newBuilder().setData(byteStr).build();
 
+
     Publisher publisher = 
-      Publisher.newBuilder(ProjectTopicName.of(PROJECT_ID, topicName)).build();
+      Publisher.newBuilder(topicName)
+      .setCredentialsProvider(FixedCredentialsProvider.create(ServiceAccountCredentials.fromStream(new FileInputStream("service-account.json"))))
+      .build();
 
     // Attempt to publish the message
     String responseMessage;
