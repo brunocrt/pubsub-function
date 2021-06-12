@@ -1,6 +1,7 @@
 #
 # Standard Maven .gitignore
 #
+service-account.json
 target/
 pom.xml.tag
 pom.xml.releaseBackup
